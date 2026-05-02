@@ -4,3 +4,4 @@ pandas
 joblib
 imbalanced-learn
 Werkzeug
+gunicorn
