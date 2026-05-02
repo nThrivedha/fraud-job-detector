@@ -1,46 +1,57 @@
-# 🚨 FraudSentinel AI - Job Scam Detector
+# 🛡️ FraudSentinel AI — Job Scam Detector
 
-FraudSentinel AI is a machine-learning web application built with Python and Flask. It analyzes job posting titles and descriptions in real time to classify them as either **Genuine** or **Fraudulent**, protecting job seekers from scams.
+An AI-powered web application that detects fraudulent job postings in real time using three machine learning models trained on the EMSCAD dataset.
 
-## ✨ Features
-- **3-Model Cross Validation**: Uses Support Vector Machine (SVM), Random Forest, and Complement Naive Bayes with consensus-based scoring.
-- **Real-Time Risk Scoring**: Parallel side-by-side layout showing confidence scores, model breakdown, and AI reasoning.
-- **History Tracking**: Card-based scan history with search, filtering, sorting, and CSV export.
-- **User Authentication**: Secure login/register with hashed passwords (Werkzeug).
-- **Admin Dashboard**: Protected admin panel with charts showing scans by model and severity breakdown.
-- **Flagged Jobs Management**: Automated fraud flagging with keyword matching from a configurable rules database.
-- **Risk Levels**: Three-tier classification — Fraudulent (red), Uncertain (yellow), Genuine (green).
+🔗 **Live Demo:** https://fraud-job-detector-xqf3.onrender.com/
 
-## 🛠️ Tech Stack
-- **Backend:** Python 3.10, Flask, SQLite3, Werkzeug
-- **Machine Learning:** Scikit-Learn, Pandas, Joblib, imbalanced-learn (TF-IDF Vectorization + SMOTE)
-- **Frontend:** HTML5, Vanilla CSS3, JavaScript, Chart.js
-- **Database:** SQLite3 with 5 tables (users, job_posts, flagged_jobs, fraud_rules, admin_logs)
+---
 
-## 🚀 How to Run Locally
+## What It Does
 
-1. **Clone the repository** (or download the ZIP and extract it):
-   ```bash
-   git clone https://github.com/yourusername/fraud-detector.git
-   cd fraud-detector
-   ```
+Users paste any job title and description. The system analyzes it using three ML classifiers simultaneously and returns a verdict — **Genuine** or **Fraudulent** — with a confidence score and full model breakdown.
 
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+---
 
-3. **Train the models (if missing):**
-   *Note: This might take a few minutes as it vectorizes the dataset and trains all 3 models.*
-   ```bash
-   python train_model.py
-   ```
+## Tech Stack
 
-4. **Run the Flask server:**
-   ```bash
-   python app.py
-   ```
+| Layer | Technology |
+|---|---|
+| Backend | Python 3.10, Flask |
+| Database | SQLite3 (jobs.db) |
+| ML Models | Scikit-Learn, Joblib |
+| NLP | TF-IDF Vectorization |
+| Frontend | HTML5, CSS3, JavaScript |
 
+---
+
+## ML Models Used
+
+| Model | Accuracy | F1-Score | AUC-ROC |
+|---|---|---|---|
+| Support Vector Machine (SVM) | 98.41% | 0.83 | 0.98 |
+| Random Forest | 98.38% | 0.80 | 0.98 |
+| Naive Bayes (ComplementNB) | 82.33% | 0.33 | 0.94 |
+
+The model with the highest confidence score is selected as the final verdict.
+
+---
+
+## Dataset
+
+- **EMSCAD** (Employment Scam Aegean Dataset) — Kaggle
+- 17,880 real-world job postings (2012–2014)
+- 95% genuine, 5% fraudulent
+- SMOTE applied to handle class imbalance
+
+---
+
+## How to Run Locally
+
+```bash
+git clone https://github.com/nThrivedha/fraud-job-detector.git
+cd fraud-job-detector
+pip install -r requirements.txt
+python app.py
 5. **Open in your browser:**
    Go to `http://127.0.0.1:5000/`
 
