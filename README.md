@@ -52,8 +52,10 @@ git clone https://github.com/nThrivedha/fraud-job-detector.git
 cd fraud-job-detector
 pip install -r requirements.txt
 python app.py
-5. **Open in your browser:**
+ **Open in your browser:**
    Go to `http://127.0.0.1:5000/`
+
+---
 
 ## 🔐 Default Admin Credentials
 - **Email:** `admin@fraudsentinel.com`
