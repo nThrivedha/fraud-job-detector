@@ -4,7 +4,6 @@ FraudSentinel AI is a machine-learning web application built with Python and Fla
 
 ## ✨ Features
 - **3-Model Cross Validation**: Uses Support Vector Machine (SVM), Random Forest, and Complement Naive Bayes with consensus-based scoring.
-- **Glassmorphism UI**: Beautiful, modern dark-mode dashboard with animated orbs and micro-interactions.
 - **Real-Time Risk Scoring**: Parallel side-by-side layout showing confidence scores, model breakdown, and AI reasoning.
 - **History Tracking**: Card-based scan history with search, filtering, sorting, and CSV export.
 - **User Authentication**: Secure login/register with hashed passwords (Werkzeug).
