@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FraudSentinel AI — Stop Fake Jobs</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05050f;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --blue: #6C63FF;
+    --blue-light: #8B85FF;
+    --cyan: #00D4FF;
+    --red: #FF4D6D;
+    --green: #00F5A0;
+    --text: #E8E8F0;
+    --muted: rgba(232,232,240,0.5);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* ── ANIMATED BACKGROUND ── */
+  .bg-orbs {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.25;
+    animation: drift 20s ease-in-out infinite alternate;
+  }
+  .orb-1 { width: 600px; height: 600px; background: var(--blue); top: -200px; left: -150px; animation-delay: 0s; }
+  .orb-2 { width: 500px; height: 500px; background: var(--cyan); bottom: -200px; right: -100px; animation-delay: -7s; }
+  .orb-3 { width: 400px; height: 400px; background: var(--red); top: 40%; left: 50%; transform: translate(-50%,-50%); opacity: 0.15; animation-delay: -14s; }
+
+  @keyframes drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(40px, 30px) scale(1.08); }
+  }
+
+  /* Noise grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 3rem;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    background: rgba(5,5,15,0.6);
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .logo-shield {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .nav-links { display: flex; align-items: center; gap: 2rem; }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .btn-nav {
+    background: var(--blue);
+    color: white !important;
+    padding: 0.5rem 1.2rem;
+    border-radius: 100px;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.2s !important;
+  }
+  .btn-nav:hover { background: var(--blue-light) !important; transform: translateY(-1px); }
+
+  /* ── SECTIONS ── */
+  section { position: relative; z-index: 2; }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8rem 2rem 4rem;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    background: var(--card);
+    backdrop-filter: blur(10px);
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--cyan);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.2rem, 6vw, 5rem);
+    font-weight: 700;
+    line-height: 1.0;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero h1 .grad {
+    background: linear-gradient(135deg, var(--blue-light), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+    color: var(--muted);
+    max-width: 540px;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 2rem;
+    background: linear-gradient(135deg, var(--blue), var(--blue-light));
+    color: white;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 30px rgba(108,99,255,0.35);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 40px rgba(108,99,255,0.5);
+  }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 2rem;
+    background: var(--card);
+    color: var(--text);
+    border-radius: 100px;
+    font-weight: 500;
+    font-size: 1rem;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    backdrop-filter: blur(10px);
+  }
+  .btn-secondary:hover {
+    background: rgba(255,255,255,0.08);
+    transform: translateY(-2px);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── STATS ── */
+  .stats-section {
+    padding: 4rem 3rem;
+    display: flex;
+    justify-content: center;
+  }
+  .stats-bar {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    background: var(--card);
+    width: 100%;
+    max-width: 900px;
+  }
+  .stat-item {
+    flex: 1;
+    padding: 2rem;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    position: relative;
+    transition: background 0.3s;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-item:hover { background: rgba(255,255,255,0.04); }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+  }
+  .stat-num.blue  { background: linear-gradient(135deg, var(--blue-light), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .stat-num.green { background: linear-gradient(135deg, var(--green), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .stat-num.red   { background: linear-gradient(135deg, var(--red), #FF8FA3); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .stat-label { font-size: 0.85rem; color: var(--muted); font-weight: 500; }
+
+  /* ── HOW IT WORKS ── */
+  .how-section { padding: 5rem 3rem; max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--blue-light);
+    margin-bottom: 0.8rem;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 3.5vw, 2.5rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+  }
+  .section-sub { color: var(--muted); max-width: 480px; line-height: 1.7; margin-bottom: 3rem; }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+  }
+  .step-card {
+    padding: 2rem;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--card);
+    backdrop-filter: blur(10px);
+    transition: border-color 0.3s, transform 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .step-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  .step-card:hover { border-color: rgba(108,99,255,0.3); transform: translateY(-4px); }
+  .step-card:hover::before { transform: scaleX(1); }
+
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: rgba(108,99,255,0.2);
+    line-height: 1;
+    margin-bottom: 1rem;
+  }
+  .step-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .step-card h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .step-card p  { font-size: 0.88rem; color: var(--muted); line-height: 1.65; }
+
+  /* ── MODELS ── */
+  .models-section { padding: 5rem 3rem; max-width: 1100px; margin: 0 auto; }
+  .models-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  .model-card {
+    padding: 2rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    backdrop-filter: blur(12px);
+    transition: transform 0.3s, border-color 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .model-card:hover { transform: translateY(-6px); }
+  .model-card.svm   { border-color: rgba(108,99,255,0.2); }
+  .model-card.rf    { border-color: rgba(0,245,160,0.2); }
+  .model-card.nb    { border-color: rgba(0,212,255,0.2); }
+  .model-card.svm:hover  { border-color: rgba(108,99,255,0.5); box-shadow: 0 20px 60px rgba(108,99,255,0.15); }
+  .model-card.rf:hover   { border-color: rgba(0,245,160,0.5); box-shadow: 0 20px 60px rgba(0,245,160,0.15); }
+  .model-card.nb:hover   { border-color: rgba(0,212,255,0.5); box-shadow: 0 20px 60px rgba(0,212,255,0.15); }
+
+  .model-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 1.2rem;
+  }
+  .svm .model-icon  { background: rgba(108,99,255,0.15); }
+  .rf  .model-icon  { background: rgba(0,245,160,0.12); }
+  .nb  .model-icon  { background: rgba(0,212,255,0.12); }
+
+  .model-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  .model-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+    margin-bottom: 1rem;
+  }
+  .svm .model-tag  { background: rgba(108,99,255,0.15); color: var(--blue-light); }
+  .rf  .model-tag  { background: rgba(0,245,160,0.12); color: var(--green); }
+  .nb  .model-tag  { background: rgba(0,212,255,0.12); color: var(--cyan); }
+
+  .model-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.65; margin-bottom: 1.2rem; }
+
+  .model-metrics { display: flex; gap: 1.5rem; }
+  .metric { }
+  .metric-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+  .svm .metric-val  { color: var(--blue-light); }
+  .rf  .metric-val  { color: var(--green); }
+  .nb  .metric-val  { color: var(--cyan); }
+  .metric-key { font-size: 0.75rem; color: var(--muted); }
+
+  /* ── LIVE DEMO TEASER ── */
+  .demo-section {
+    padding: 5rem 3rem;
+    display: flex;
+    justify-content: center;
+  }
+  .demo-card {
+    max-width: 700px;
+    width: 100%;
+    padding: 3rem;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    background: var(--card);
+    backdrop-filter: blur(20px);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .demo-card::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 10%; right: 10%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), transparent);
+  }
+  .demo-card h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.5rem, 3vw, 1.9rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.8rem;
+  }
+  .demo-card p { color: var(--muted); margin-bottom: 2rem; line-height: 1.7; }
+
+  .fake-input {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem 1.2rem;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    text-align: left;
+    cursor: not-allowed;
+  }
+  .fake-result {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: rgba(255,77,109,0.1);
+    border: 1px solid rgba(255,77,109,0.3);
+    color: #FF4D6D;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+  }
+
+  /* ── BOTTOM CTA ── */
+  .cta-section {
+    padding: 6rem 3rem;
+    text-align: center;
+  }
+  .cta-section h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 3rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    margin-bottom: 1rem;
+  }
+  .cta-section p { color: var(--muted); margin-bottom: 2.5rem; font-size: 1.05rem; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--text); }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+</style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="logo-shield">🛡</div>
+    FraudSentinel AI
+  </a>
+  <div class="nav-links">
+    <a href="/analyze">Analyze</a>
+    <a href="/history">History</a>
+    <a href="/flagged-ui">Flagged</a>
+    <a href="/admin/stats-ui">Dashboard</a>
+    <a href="/auth" class="btn-nav">Sign In →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="badge">
+    <div class="badge-dot"></div>
+    AI-Powered Job Fraud Detection
+  </div>
+
+  <h1>
+    Stop <span class="grad">Fake Jobs</span><br>
+    Before They Stop You
+  </h1>
+
+  <p class="hero-sub">
+    FraudSentinel AI instantly analyzes any job posting using three powerful machine learning models — SVM, Random Forest, and Naive Bayes — and tells you whether it's real or a scam.
+  </p>
+
+  <div class="hero-btns">
+    <a href="/analyze" class="btn-primary">
+      <span>🔍</span> Analyze a Job Now
+    </a>
+    <a href="#how" class="btn-secondary">
+      <span>▶</span> See How It Works
+    </a>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-section reveal">
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num blue" id="stat-scans">0</div>
+      <div class="stat-label">Total Scans Performed</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num red" id="stat-flagged">0</div>
+      <div class="stat-label">Fraudulent Jobs Flagged</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num green">98.41%</div>
+      <div class="stat-label">Best Model Accuracy</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num blue" id="stat-users">0</div>
+      <div class="stat-label">Active Users</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section reveal" id="how">
+  <div class="section-label">How It Works</div>
+  <h2 class="section-title">From text to verdict<br>in milliseconds</h2>
+  <p class="section-sub">Paste any job description. Our pipeline cleans, vectorizes, and runs it through three ML models simultaneously.</p>
+
+  <div class="steps">
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <div class="step-icon" style="background:rgba(108,99,255,0.15)">📝</div>
+      <h3>Submit Job Text</h3>
+      <p>Enter the job title and description. No account needed to get started.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">02</div>
+      <div class="step-icon" style="background:rgba(0,212,255,0.12)">⚙️</div>
+      <h3>Text Preprocessing</h3>
+      <p>URLs, emails, punctuation removed. Text lowercased, cleaned, and converted to TF-IDF vectors.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">03</div>
+      <div class="step-icon" style="background:rgba(0,245,160,0.12)">🤖</div>
+      <h3>3-Model Analysis</h3>
+      <p>SVM, Random Forest, and Naive Bayes independently analyze the job. Highest confidence wins.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">04</div>
+      <div class="step-icon" style="background:rgba(255,77,109,0.12)">🎯</div>
+      <h3>Instant Verdict</h3>
+      <p>Get a clear result — Genuine or Fraudulent — with confidence score and which model detected it.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MODELS -->
+<section class="models-section reveal" id="models">
+  <div class="section-label">The Models</div>
+  <h2 class="section-title">Three classifiers.<br>One verdict.</h2>
+  <p class="section-sub">Each model brings a different strength. The highest-confidence prediction is selected as the final answer.</p>
+
+  <div class="models-grid">
+    <div class="model-card svm">
+      <div class="model-icon">⚡</div>
+      <h3>Support Vector Machine</h3>
+      <div class="model-tag">LinearSVC · C=1.0</div>
+      <p>Finds the maximum-margin hyperplane separating real from fake jobs in high-dimensional TF-IDF space. Best balance of precision and recall.</p>
+      <div class="model-metrics">
+        <div class="metric"><div class="metric-val">98.41%</div><div class="metric-key">Accuracy</div></div>
+        <div class="metric"><div class="metric-val">0.83</div><div class="metric-key">F1-Score</div></div>
+        <div class="metric"><div class="metric-val">0.98</div><div class="metric-key">AUC-ROC</div></div>
+      </div>
+    </div>
+
+    <div class="model-card rf">
+      <div class="model-icon">🌲</div>
+      <h3>Random Forest</h3>
+      <div class="model-tag">200 Trees · Balanced</div>
+      <p>Ensemble of 200 decision trees. Perfect precision of 1.00 — zero false alarms when it flags a job as fraudulent.</p>
+      <div class="model-metrics">
+        <div class="metric"><div class="metric-val">98.38%</div><div class="metric-key">Accuracy</div></div>
+        <div class="metric"><div class="metric-val">1.00</div><div class="metric-key">Precision</div></div>
+        <div class="metric"><div class="metric-val">0.98</div><div class="metric-key">AUC-ROC</div></div>
+      </div>
+    </div>
+
+    <div class="model-card nb">
+      <div class="model-icon">📊</div>
+      <h3>Naive Bayes</h3>
+      <div class="model-tag">ComplementNB · α=1.0</div>
+      <p>Fast probabilistic classifier. Highest recall of 0.90 — catches the most fraudulent jobs including edge cases other models miss.</p>
+      <div class="model-metrics">
+        <div class="metric"><div class="metric-val">82.33%</div><div class="metric-key">Accuracy</div></div>
+        <div class="metric"><div class="metric-val">0.90</div><div class="metric-key">Recall</div></div>
+        <div class="metric"><div class="metric-val">0.94</div><div class="metric-key">AUC-ROC</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO TEASER -->
+<section class="demo-section reveal">
+  <div class="demo-card">
+    <h2>See it in action</h2>
+    <p>Paste any job description and get an instant AI-powered verdict. Try these suspicious phrases:</p>
+    <div class="fake-input">💼 "Earn ₹5000/day from home. No experience required. Immediate joining. Send your Aadhaar..."</div>
+    <div class="fake-result">
+      ⚠️ FRAUDULENT — 97.2% confidence (Random Forest)
+    </div>
+    <a href="/analyze" class="btn-primary" style="width:100%;justify-content:center">
+      🔍 Try Analyzing a Real Job →
+    </a>
+  </div>
+</section>
+
+<!-- BOTTOM CTA -->
+<section class="cta-section reveal">
+  <h2>Don't fall for<br><span style="background:linear-gradient(135deg,var(--blue-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">fake opportunities</span></h2>
+  <p>Free to use. No account required. Results in under a second.</p>
+  <a href="/analyze" class="btn-primary" style="font-size:1.1rem;padding:1rem 2.5rem">
+    Start Analyzing for Free →
+  </a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>🛡 FraudSentinel AI · DSU Cyber Security Project 2026</div>
+  <div style="display:flex;gap:1.5rem">
+    <a href="/analyze">Analyze</a>
+    <a href="/flagged">Flagged</a>
+    <a href="https://github.com/nThrivedha/fraud-job-detector" target="_blank">GitHub</a>
+  </div>
+</footer>
+
+<script>
+  // ── SCROLL REVEAL ──
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── LIVE STATS FROM /admin/stats ──
+  function animateNum(el, target, suffix='') {
+    let current = 0;
+    const step  = Math.ceil(target / 40);
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = current + suffix;
+      if (current >= target) clearInterval(timer);
+    }, 40);
+  }
+
+  fetch('/admin/stats')
+    .then(r => r.json())
+    .then(data => {
+      animateNum(document.getElementById('stat-scans'),   data.total_scans   || 0);
+      animateNum(document.getElementById('stat-flagged'), data.flagged_jobs   || 0);
+      animateNum(document.getElementById('stat-users'),   data.total_users    || 0);
+    })
+    .catch(() => {
+      // fallback demo numbers if API not reachable
+      animateNum(document.getElementById('stat-scans'),   12);
+      animateNum(document.getElementById('stat-flagged'), 3);
+      animateNum(document.getElementById('stat-users'),   1);
+    });
+</script>
+</body>
+</html>

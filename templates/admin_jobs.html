@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FraudSentinel AI — All Jobs</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05050f; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08);
+    --blue: #6C63FF; --blue-light: #8B85FF; --cyan: #00D4FF;
+    --red: #FF4D6D; --green: #00F5A0;
+    --text: #E8E8F0; --muted: rgba(232,232,240,0.5);
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+  .bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+  .orb { position:absolute; border-radius:50%; filter:blur(90px); opacity:.18; animation:drift 18s ease-in-out infinite alternate; }
+  .orb-1 { width:500px; height:500px; background:#6C63FF; top:-150px; left:-100px; }
+  .orb-2 { width:400px; height:400px; background:#00D4FF; bottom:-150px; right:-80px; animation-delay:-9s; }
+  @keyframes drift { 0%{transform:translate(0,0)} 100%{transform:translate(30px,25px)} }
+
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:1.2rem 3rem; border-bottom:1px solid var(--border); backdrop-filter:blur(20px); background:rgba(5,5,15,.7); }
+  .nav-logo { display:flex; align-items:center; gap:.6rem; font-family:'Syne',sans-serif; font-weight:700; font-size:1.15rem; color:var(--text); text-decoration:none; }
+  .logo-shield { width:28px; height:28px; background:linear-gradient(135deg,var(--blue),var(--cyan)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .nav-links { display:flex; align-items:center; gap:2rem; }
+  .nav-links a { color:var(--muted); text-decoration:none; font-size:.9rem; font-weight:500; transition:color .2s; }
+  .nav-links a:hover, .nav-links a.active { color:var(--blue-light); }
+
+  main { position:relative; z-index:2; padding:7rem 3rem 4rem; max-width:1200px; margin:0 auto; }
+  .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem; }
+  .page-header h1 { font-family:'Syne',sans-serif; font-size:clamp(1.5rem,3vw,2rem); font-weight:700; }
+
+  .search-bar {
+    background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--text);
+    padding:.7rem 1rem; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.9rem;
+    outline:none; min-width:250px; transition:border-color .2s;
+  }
+  .search-bar:focus { border-color:rgba(108,99,255,.5); }
+
+  .table-wrap {
+    background:rgba(10,10,25,.7); border:1px solid var(--border); border-radius:20px;
+    overflow:hidden; backdrop-filter:blur(20px);
+  }
+  table { width:100%; border-collapse:collapse; }
+  thead th {
+    padding:1rem 1.5rem; text-align:left; font-size:.78rem; font-weight:600;
+    color:var(--muted); letter-spacing:.05em; text-transform:uppercase;
+    border-bottom:1px solid var(--border);
+  }
+  tbody tr { border-bottom:1px solid var(--border); transition:background .2s; }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:hover { background:rgba(255,255,255,.03); }
+  td { padding:1rem 1.5rem; font-size:.88rem; vertical-align:middle; }
+  .td-title { font-weight:600; max-width:220px; }
+  .badge { padding:.25rem .6rem; border-radius:100px; font-size:.72rem; font-weight:600; }
+  .badge-fraud { background:rgba(255,77,109,.1); color:var(--red); border:1px solid rgba(255,77,109,.3); }
+  .badge-genuine { background:rgba(0,245,160,.1); color:var(--green); border:1px solid rgba(0,245,160,.3); }
+  .td-conf { font-family:'Syne',sans-serif; font-weight:600; }
+  .td-model { color:var(--muted); font-size:.82rem; }
+  .td-user { color:var(--blue-light); font-size:.82rem; }
+  .td-time { color:var(--muted); font-size:.78rem; }
+
+  .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:spin .8s linear infinite; margin:3rem auto; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .empty-row td { text-align:center; padding:3rem; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="bg-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+
+<nav>
+  <a href="/" class="nav-logo"><div class="logo-shield">🛡</div> FraudSentinel AI</a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/analyze">Analyze</a>
+    <a href="/history">History</a>
+    <a href="/flagged-ui">Flagged</a>
+    <a href="/admin/stats-ui">Dashboard</a>
+  </div>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>🧾 All Job Scans</h1>
+    <input type="text" class="search-bar" id="search" placeholder="Search by title, user, model...">
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Job Title</th>
+          <th>User</th>
+          <th>Prediction</th>
+          <th>Confidence</th>
+          <th>Model</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody id="data">
+        <tr><td colspan="6" style="text-align:center;padding:3rem"><div class="spinner"></div><p style="color:var(--muted)">Loading...</p></td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+let allData = [];
+
+fetch('/admin/jobs')
+  .then(res => {
+    if (!res.ok) throw new Error('Unauthorized');
+    return res.json();
+  })
+  .then(data => {
+    allData = data;
+    render(data);
+  })
+  .catch(e => {
+    document.getElementById('data').innerHTML = `<tr><td colspan="6" style="text-align:center;padding:3rem;color:var(--muted)">🔒 Admin access required. <a href="/auth" style="color:var(--blue-light)">Sign in</a></td></tr>`;
+  });
+
+function render(data) {
+  const tbody = document.getElementById('data');
+  if (!data.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">No scans found.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(j => {
+    const isFraud = j.prediction === 'Fraudulent';
+    let dateStr = j.time || '';
+    try { const d = new Date(dateStr); if(!isNaN(d)) dateStr = d.toLocaleDateString(); } catch(e){}
+    return `
+      <tr>
+        <td class="td-title">${j.title || '—'}</td>
+        <td class="td-user">${j.user}</td>
+        <td><span class="badge ${isFraud ? 'badge-fraud' : 'badge-genuine'}">${isFraud ? '⚠️ Fraud' : '✅ Genuine'}</span></td>
+        <td class="td-conf" style="color:${isFraud ? 'var(--red)' : 'var(--green)'}">${j.confidence}%</td>
+        <td class="td-model">${j.model}</td>
+        <td class="td-time">${dateStr}</td>
+      </tr>`;
+  }).join('');
+}
+
+document.getElementById('search').addEventListener('input', e => {
+  const val = e.target.value.toLowerCase();
+  const filtered = allData.filter(j =>
+    (j.title && j.title.toLowerCase().includes(val)) ||
+    (j.user && j.user.toLowerCase().includes(val)) ||
+    (j.model && j.model.toLowerCase().includes(val))
+  );
+  render(filtered);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FraudSentinel AI — Flagged Jobs</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05050f; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08);
+    --blue: #6C63FF; --blue-light: #8B85FF; --cyan: #00D4FF;
+    --red: #FF4D6D; --green: #00F5A0; --yellow: #FFC800;
+    --text: #E8E8F0; --muted: rgba(232,232,240,0.5);
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+  .bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+  .orb { position:absolute; border-radius:50%; filter:blur(90px); opacity:.18; animation:drift 18s ease-in-out infinite alternate; }
+  .orb-1 { width:500px; height:500px; background:#6C63FF; top:-150px; left:-100px; }
+  .orb-2 { width:400px; height:400px; background:#00D4FF; bottom:-150px; right:-80px; animation-delay:-9s; }
+  @keyframes drift { 0%{transform:translate(0,0)} 100%{transform:translate(30px,25px)} }
+
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:1.2rem 3rem; border-bottom:1px solid var(--border); backdrop-filter:blur(20px); background:rgba(5,5,15,.7); }
+  .nav-logo { display:flex; align-items:center; gap:.6rem; font-family:'Syne',sans-serif; font-weight:700; font-size:1.15rem; color:var(--text); text-decoration:none; }
+  .logo-shield { width:28px; height:28px; background:linear-gradient(135deg,var(--blue),var(--cyan)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .nav-links { display:flex; align-items:center; gap:2rem; }
+  .nav-links a { color:var(--muted); text-decoration:none; font-size:.9rem; font-weight:500; transition:color .2s; }
+  .nav-links a:hover, .nav-links a.active { color:var(--blue-light); }
+
+  main { position:relative; z-index:2; padding:7rem 3rem 4rem; max-width:1200px; margin:0 auto; }
+  .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
+  .page-header h1 { font-family:'Syne',sans-serif; font-size:clamp(1.5rem,3vw,2rem); font-weight:700; }
+
+  .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:1.5rem; }
+
+  .flag-card {
+    background:var(--card); border:1px solid var(--border); border-radius:20px; padding:1.5rem;
+    backdrop-filter:blur(20px); transition:transform .2s, border-color .2s, box-shadow .2s;
+    position:relative; overflow:hidden;
+  }
+  .flag-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--red),#FF8FA3); }
+  .flag-card:hover { transform:translateY(-4px); border-color:rgba(255,77,109,.4); box-shadow:0 10px 30px rgba(255,77,109,.1); }
+
+  .flag-header { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:1rem; }
+  .flag-title { font-family:'Syne',sans-serif; font-weight:600; font-size:1.05rem; }
+  .severity-badge { padding:.3rem .7rem; border-radius:100px; font-size:.7rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+  .sev-high { background:rgba(255,77,109,.1); color:var(--red); border:1px solid rgba(255,77,109,.3); }
+  .sev-medium { background:rgba(255,200,0,.1); color:var(--yellow); border:1px solid rgba(255,200,0,.3); }
+  .sev-low { background:rgba(0,245,160,.1); color:var(--green); border:1px solid rgba(0,245,160,.3); }
+
+  .flag-reason { color:var(--muted); font-size:.88rem; line-height:1.5; margin-bottom:1rem; padding:.8rem; background:rgba(255,77,109,.03); border-radius:10px; border-left:3px solid var(--red); }
+
+  .flag-footer { display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,.05); padding-top:.8rem; }
+  .conf-val { font-family:'Syne',sans-serif; font-weight:600; font-size:.9rem; color:var(--red); }
+  .flag-meta { font-size:.75rem; color:var(--muted); }
+
+  .status-select { background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--text); padding:.4rem .6rem; border-radius:8px; font-size:.8rem; font-family:'DM Sans',sans-serif; outline:none; cursor:pointer; }
+
+  .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:spin .8s linear infinite; margin:3rem auto; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .empty-state { grid-column:1/-1; text-align:center; padding:5rem 2rem; color:var(--muted); background:var(--card); border-radius:20px; border:1px dashed var(--border); }
+  .empty-state .empty-icon { font-size:3rem; margin-bottom:1rem; opacity:.5; }
+</style>
+</head>
+<body>
+<div class="bg-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+
+<nav>
+  <a href="/" class="nav-logo"><div class="logo-shield">🛡</div> FraudSentinel AI</a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/analyze">Analyze</a>
+    <a href="/history">History</a>
+    <a href="/flagged-ui" class="active">Flagged</a>
+    <a href="/admin/stats-ui">Dashboard</a>
+  </div>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>🚨 Flagged Jobs</h1>
+  </div>
+  <div class="cards-grid" id="flaggedGrid">
+    <div style="grid-column:1/-1; text-align:center; padding:3rem;"><div class="spinner"></div><p style="color:var(--muted)">Loading flagged jobs...</p></div>
+  </div>
+</main>
+
+<script>
+async function loadFlagged() {
+  try {
+    const res = await fetch('/flagged');
+    if (res.status === 401 || res.status === 403) {
+      document.getElementById('flaggedGrid').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🔒</div>
+          <p>Admin access required. <a href="/auth" style="color:var(--blue-light)">Sign in</a></p>
+        </div>`;
+      return;
+    }
+    const data = await res.json();
+    renderFlagged(data);
+  } catch(e) {
+    document.getElementById('flaggedGrid').innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><p>Failed to load data.</p></div>`;
+  }
+}
+
+function renderFlagged(rows) {
+  const grid = document.getElementById('flaggedGrid');
+  if (!rows.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>No flagged jobs. All clear!</p></div>`;
+    return;
+  }
+  grid.innerHTML = rows.map(r => {
+    const sevClass = r.severity === 'high' ? 'sev-high' : r.severity === 'medium' ? 'sev-medium' : 'sev-low';
+    let dateStr = r.flagged_at || '';
+    try { const d = new Date(dateStr); if(!isNaN(d)) dateStr = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); } catch(e){}
+    return `
+      <div class="flag-card">
+        <div class="flag-header">
+          <div class="flag-title">${r.title}</div>
+          <span class="severity-badge ${sevClass}">${r.severity}</span>
+        </div>
+        <div class="flag-reason">${r.reason || 'No reason specified'}</div>
+        <div class="flag-footer">
+          <div>
+            <span class="conf-val">${r.confidence}%</span>
+            <span class="flag-meta" style="margin-left:.8rem">${dateStr}</span>
+          </div>
+          <select class="status-select" onchange="updateStatus(${r.job_id}, this.value)">
+            <option value="pending" ${r.status==='pending'?'selected':''}>Pending</option>
+            <option value="reviewed" ${r.status==='reviewed'?'selected':''}>Reviewed</option>
+            <option value="approved" ${r.status==='approved'?'selected':''}>Approved</option>
+            <option value="rejected" ${r.status==='rejected'?'selected':''}>Rejected</option>
+          </select>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function updateStatus(jobId, status) {
+  try {
+    const res = await fetch(`/flagged/${jobId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Update failed');
+    console.log(`Success: ${data.message}`);
+  } catch(e) {
+    console.error('Persistence error:', e);
+    alert('Failed to save status update. Check console for details.');
+  }
+}
+
+loadFlagged();
+</script>
+</body>
+</html>

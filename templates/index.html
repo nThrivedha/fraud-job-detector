@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FraudSentinel AI — Analyze</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05050f;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --blue: #6C63FF;
+    --blue-light: #8B85FF;
+    --cyan: #00D4FF;
+    --red: #FF4D6D;
+    --green: #00F5A0;
+    --text: #E8E8F0;
+    --muted: rgba(232,232,240,0.5);
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* BG orbs */
+  .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.2; animation: drift 18s ease-in-out infinite alternate; }
+  .orb-1 { width: 500px; height: 500px; background: #6C63FF; top: -150px; left: -100px; }
+  .orb-2 { width: 400px; height: 400px; background: #00D4FF; bottom: -150px; right: -80px; animation-delay: -9s; }
+  @keyframes drift { 0% { transform: translate(0,0); } 100% { transform: translate(30px,25px); } }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 3rem;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    background: rgba(5,5,15,0.7);
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.15rem;
+    color: var(--text); text-decoration: none; letter-spacing: -0.02em;
+  }
+  .logo-shield {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+  .nav-links { display: flex; align-items: center; gap: 2rem; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 0.9rem; font-weight: 500; transition: color 0.2s;
+  }
+  .nav-links a:hover, .nav-links a.active { color: var(--blue-light); }
+
+  /* MAIN */
+  main {
+    position: relative; z-index: 2;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 7rem 2rem 4rem;
+  }
+
+  .page-header { text-align: center; margin-bottom: 2.5rem; }
+  .page-header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 700; letter-spacing: -0.04em;
+    background: linear-gradient(135deg, var(--text), var(--blue-light));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 0.8rem;
+  }
+  .page-header p { color: var(--muted); font-size: 1rem; max-width: 580px; line-height: 1.6; }
+
+  /* FORM CARD */
+  .form-card {
+    width: 100%; max-width: 520px;
+    background: rgba(15,15,30,0.8);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    backdrop-filter: blur(20px);
+    margin-bottom: 2rem;
+  }
+  .field { margin-bottom: 1.5rem; }
+  .field label {
+    display: block; font-size: 0.9rem; font-weight: 600;
+    margin-bottom: 0.5rem; color: var(--text);
+  }
+  .field label span { color: var(--muted); font-weight: 400; }
+  .field label .req { color: var(--red); margin-left: 2px; }
+  .field input, .field textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    resize: vertical;
+  }
+  .field input::placeholder, .field textarea::placeholder { color: var(--muted); }
+  .field input:focus, .field textarea:focus {
+    border-color: rgba(108,99,255,0.5);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
+  }
+  .field textarea { min-height: 220px; }
+
+  .btn-analyze {
+    width: 100%; padding: 1rem;
+    background: linear-gradient(135deg, var(--blue), var(--blue-light));
+    color: white; border: none; border-radius: 12px;
+    font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.95rem;
+    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    box-shadow: 0 4px 20px rgba(108,99,255,0.3);
+  }
+  .btn-analyze:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(108,99,255,0.5); }
+  .btn-analyze:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* RESULT */
+  .result-card {
+    width: 100%; max-width: 520px;
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    display: none;
+    animation: fadeUp 0.5s ease both;
+  }
+  .result-card.show { display: block; }
+  .result-card.fraudulent { background: rgba(255,77,109,0.08); border-color: rgba(255,77,109,0.3); }
+  .result-card.genuine    { background: rgba(0,245,160,0.06); border-color: rgba(0,245,160,0.3); }
+
+  /* GRID LAYOUT AND TABS */
+  .analysis-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  @media (max-width: 900px) {
+    .analysis-container { grid-template-columns: 1fr; }
+  }
+  .form-card { max-width: 100%; margin-bottom: 0; }
+  .result-card { max-width: 100%; }
+  .error-msg { max-width: 100%; }
+
+  .placeholder-card {
+    width: 100%; border-radius: 20px; padding: 4rem 2rem;
+    background: rgba(15,15,30,0.5); border: 1px dashed var(--border);
+    text-align: center; color: var(--muted);
+  }
+  .placeholder-card.hide { display: none; }
+  .placeholder-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+  .placeholder-card h3 { font-family: 'Syne', sans-serif; color: var(--text); margin-bottom: 0.5rem; }
+
+  /* Tabs CSS */
+  .result-tabs {
+    display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.8rem;
+  }
+  .tab-btn {
+    background: transparent; border: none; color: var(--muted); font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; font-weight: 600; padding: 0.6rem 1.2rem; cursor: pointer; border-radius: 8px;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .tab-btn.active { color: var(--blue-light); background: rgba(108,99,255,0.1); }
+  .tab-content { display: none; animation: fadeUp 0.3s ease both; }
+  .tab-content.active { display: block; }
+  
+  .reasons-list { list-style: none; padding: 0; margin: 0; }
+  .reasons-list li {
+    padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 0.8rem;
+    font-size: 0.9rem; border-left: 3px solid var(--blue-light); color: var(--text); line-height: 1.5;
+    position: relative;
+  }
+  .reasons-list li .flag-badge {
+    position: absolute; top: 0.8rem; right: 1rem;
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 4px; letter-spacing: 0.05em;
+  }
+  .flag-high { background: rgba(255,77,109,0.2); color: var(--red); border: 1px solid rgba(255,77,109,0.3); }
+  .flag-medium { background: rgba(255,165,0,0.2); color: #FFA500; border: 1px solid rgba(255,165,0,0.3); }
+  .flag-low { background: rgba(108,99,255,0.2); color: var(--blue-light); border: 1px solid rgba(108,99,255,0.3); }
+
+  .fraudulent .reasons-list li { border-left-color: var(--red); background: rgba(255,77,109,0.05); }
+  .genuine .reasons-list li { border-left-color: var(--green); background: rgba(0,245,160,0.05); }
+
+  .result-verdict {
+    display: flex; align-items: center; gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .verdict-icon { font-size: 2.5rem; }
+  .verdict-text h2 {
+    font-family: 'Syne', sans-serif; font-size: clamp(1.2rem, 2vw, 1.5rem); font-weight: 700; letter-spacing: -0.02em;
+  }
+  .verdict-text h2.fraud-label { color: var(--red); }
+  .verdict-text h2.genuine-label { color: var(--green); }
+  .verdict-text p { color: var(--muted); font-size: 0.88rem; margin-top: 0.2rem; }
+
+  .confidence-bar-wrap { margin-bottom: 1.5rem; }
+  .conf-label { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem; }
+  .conf-label span:last-child { font-weight: 600; color: var(--text); }
+  .conf-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 100px; overflow: hidden; }
+  .conf-fill { height: 100%; border-radius: 100px; transition: width 1s ease; }
+  .fraudulent .conf-fill { background: linear-gradient(90deg, var(--red), #FF8FA3); }
+  .genuine    .conf-fill { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+
+  .model-breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
+  .model-chip {
+    padding: 0.7rem; border-radius: 10px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    text-align: center;
+  }
+  .model-chip.winner { border-color: rgba(108,99,255,0.5); background: rgba(108,99,255,0.1); }
+  .chip-name { font-size: 0.72rem; color: var(--muted); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.3rem; }
+  .chip-label { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.2rem; }
+  .chip-label.fraud { color: var(--red); }
+  .chip-label.genuine { color: var(--green); }
+  .chip-conf { font-size: 0.75rem; color: var(--muted); }
+  .chip-best { font-size: 0.65rem; color: var(--blue-light); font-weight: 600; margin-top: 0.2rem; }
+
+  .loading { display: none; text-align: center; padding: 2rem; }
+  .loading.show { display: block; }
+  .spinner {
+    width: 40px; height: 40px; border: 3px solid var(--border);
+    border-top-color: var(--blue); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+  .error-msg {
+    width: 100%; max-width: 520px;
+    padding: 1rem 1.2rem;
+    background: rgba(255,77,109,0.1); border: 1px solid rgba(255,77,109,0.3);
+    border-radius: 12px; color: var(--red); font-size: 0.9rem;
+    display: none; margin-bottom: 1rem;
+  }
+  .error-msg.show { display: block; }
+</style>
+</head>
+<body>
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+</div>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="logo-shield">🛡</div>
+    FraudSentinel AI
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/analyze" class="active">Analyze</a>
+    <a href="/history">History</a>
+    <a href="/flagged-ui">Flagged</a>
+    <a href="/admin/stats-ui">Dashboard</a>
+  </div>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>Job Fraud Analyzer</h1>
+    <p>Paste any job posting below. Our 3 ML models will analyze it and give you a clear fraud verdict with confidence scores.</p>
+  </div>
+
+  <div class="analysis-container">
+    <div class="analysis-form-col">
+      <div class="error-msg" id="errorMsg"></div>
+
+      <div class="form-card">
+        <div class="field">
+          <label>Job Title <span>(Optional)</span></label>
+          <input type="text" id="jobTitle" placeholder="e.g. Senior Software Engineer">
+        </div>
+        <div class="field">
+          <label>Job Description <span class="req">*</span></label>
+          <textarea id="jobDesc" placeholder="Paste the full job description here..."></textarea>
+        </div>
+        <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">
+          ⚡ Analyze Posting
+        </button>
+      </div>
+    </div>
+
+    <div class="analysis-result-col">
+      <div class="placeholder-card" id="placeholderCard">
+        <div class="placeholder-icon">🛡️</div>
+        <h3>Awaiting Analysis</h3>
+        <p>Submit a job posting on the left to see the AI verdict.</p>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p style="color:var(--muted);font-size:0.9rem">Running 3 ML models simultaneously...</p>
+      </div>
+
+      <div class="result-card" id="resultCard">
+        <div class="result-verdict">
+          <div class="verdict-icon" id="verdictIcon"></div>
+          <div class="verdict-text">
+            <h2 id="verdictLabel"></h2>
+            <p id="verdictSub"></p>
+          </div>
+        </div>
+        <div class="confidence-bar-wrap">
+          <div class="conf-label">
+            <span>Confidence Score</span>
+            <span id="confNum"></span>
+          </div>
+          <div class="conf-bar">
+            <div class="conf-fill" id="confFill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="result-tabs">
+          <button class="tab-btn active" onclick="switchTab('models')">Models Breakdown</button>
+          <button class="tab-btn" onclick="switchTab('reasons')">Reasoning</button>
+        </div>
+
+        <div id="modelsTab" class="tab-content active">
+          <div class="model-breakdown" id="modelBreakdown"></div>
+        </div>
+
+        <div id="reasonsTab" class="tab-content">
+          <ul class="reasons-list" id="reasonsList"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+async function analyze() {
+  const title = document.getElementById('jobTitle').value.trim();
+  const desc  = document.getElementById('jobDesc').value.trim();
+  const errEl = document.getElementById('errorMsg');
+  errEl.classList.remove('show');
+
+  if (!desc) {
+    errEl.textContent = 'Please enter a job description.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('placeholderCard').classList.add('hide');
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('resultCard').classList.remove('show');
+
+  try {
+    const res  = await fetch('/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, description: desc })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || 'Server error');
+
+    showResult(data);
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.classList.add('show');
+  } finally {
+    document.getElementById('analyzeBtn').disabled = false;
+    document.getElementById('loading').classList.remove('show');
+  }
+}
+
+function showResult(data) {
+  const card   = document.getElementById('resultCard');
+  const isFraud = data.is_fraudulent;
+
+  card.className = 'result-card show ' + (isFraud ? 'fraudulent' : 'genuine');
+
+  document.getElementById('verdictIcon').textContent  = isFraud ? '⚠️' : '✅';
+  const lbl = document.getElementById('verdictLabel');
+  lbl.textContent = isFraud ? 'FRAUDULENT' : 'GENUINE';
+  lbl.className   = isFraud ? 'fraud-label' : 'genuine-label';
+  document.getElementById('verdictSub').textContent =
+    `Best model: ${data.model_used} · Confidence: ${data.confidence}%`;
+
+  document.getElementById('confNum').textContent = data.confidence + '%';
+  setTimeout(() => {
+    document.getElementById('confFill').style.width = data.confidence + '%';
+  }, 100);
+
+  const breakdown = document.getElementById('modelBreakdown');
+  breakdown.innerHTML = '';
+  const models = data.all_models || {};
+  Object.entries(models).forEach(([name, info]) => {
+    const isWinner = name === data.model_used;
+    const isFr = info.label === 'Fraudulent';
+    breakdown.innerHTML += `
+      <div class="model-chip ${isWinner ? 'winner' : ''}">
+        <div class="chip-name">${name}</div>
+        <div class="chip-label ${isFr ? 'fraud' : 'genuine'}">${info.label}</div>
+        <div class="chip-conf">${info.confidence}%</div>
+        ${isWinner ? '<div class="chip-best">★ Selected</div>' : ''}
+      </div>`;
+  });
+
+  const reasonsList = document.getElementById('reasonsList');
+  reasonsList.innerHTML = '';
+  
+  // 1. Show Semantic Flags with Badges
+  if (data.semantic_flags && data.semantic_flags.length) {
+    data.semantic_flags.forEach(f => {
+      reasonsList.innerHTML += `
+        <li>
+          <span class="flag-badge flag-${f.severity}">${f.severity} risk</span>
+          <strong style="display:block;margin-bottom:4px;color:var(--text)">${f.type}</strong>
+          ${f.indicator}
+        </li>`;
+    });
+  }
+
+  // 2. Show General Reasoning
+  if (data.reasons && data.reasons.length) {
+    data.reasons.forEach(r => {
+      // Avoid duplicating info already in semantic flags
+      if (!r.startsWith('[')) {
+        reasonsList.innerHTML += `<li>${r}</li>`;
+      }
+    });
+  }
+  
+  if (reasonsList.innerHTML === '') {
+    reasonsList.innerHTML = `<li>No specific reasoning provided.</li>`;
+  }
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+  document.querySelector(`button[onclick="switchTab('${tabId}')"]`).classList.add('active');
+  document.getElementById(tabId + 'Tab').classList.add('active');
+}
+</script>
+</body>
+</html>

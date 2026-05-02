@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #020617);
+            color: white;
+            margin: 0;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 40px;
+            backdrop-filter: blur(12px);
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .nav-links a {
+            margin-left: 20px;
+            text-decoration: none;
+            color: #cbd5f5;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        /* MAIN CONTENT */
+        .container {
+            padding: 30px;
+        }
+
+        /* GLASS CARD */
+        .card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.4);
+            margin-bottom: 20px;
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        th {
+            color: #94a3b8;
+            text-align: left;
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* INPUT */
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.08);
+            color: white;
+        }
+
+        /* BUTTON */
+        button {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        /* BADGES */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .fraud {
+            background: #dc2626;
+        }
+
+        .genuine {
+            background: #16a34a;
+        }
+
+        .pending {
+            background: #eab308;
+            color: black;
+        }
+
+        /* GRID */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        /* CHART FIX */
+        canvas {
+            max-width: 300px !important;
+            max-height: 250px !important;
+        }
+
+        /* ANIMATION */
+        .fade {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {opacity:0; transform: translateY(10px);}
+            to {opacity:1;}
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo">🚨 FraudSentinel</div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/analyze">Analyze</a>
+        <a href="/flagged-ui">Flagged</a>
+        <a href="/admin/stats-ui">Dashboard</a>
+    </div>
+</div>
+
+<!-- CONTENT -->
+<div class="container fade">
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

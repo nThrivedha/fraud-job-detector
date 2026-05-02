@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FraudSentinel AI — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --bg: #05050f; --card: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08);
+    --blue: #6C63FF; --blue-light: #8B85FF; --cyan: #00D4FF;
+    --red: #FF4D6D; --green: #00F5A0; --yellow: #FFC800;
+    --text: #E8E8F0; --muted: rgba(232,232,240,0.5);
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+  .bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+  .orb { position:absolute; border-radius:50%; filter:blur(90px); opacity:.18; animation:drift 18s ease-in-out infinite alternate; }
+  .orb-1 { width:500px; height:500px; background:#6C63FF; top:-150px; left:-100px; }
+  .orb-2 { width:400px; height:400px; background:#00D4FF; bottom:-150px; right:-80px; animation-delay:-9s; }
+  @keyframes drift { 0%{transform:translate(0,0)} 100%{transform:translate(30px,25px)} }
+
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:1.2rem 3rem; border-bottom:1px solid var(--border); backdrop-filter:blur(20px); background:rgba(5,5,15,.7); }
+  .nav-logo { display:flex; align-items:center; gap:.6rem; font-family:'Syne',sans-serif; font-weight:700; font-size:1.15rem; color:var(--text); text-decoration:none; }
+  .logo-shield { width:28px; height:28px; background:linear-gradient(135deg,var(--blue),var(--cyan)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .nav-links { display:flex; align-items:center; gap:2rem; }
+  .nav-links a { color:var(--muted); text-decoration:none; font-size:.9rem; font-weight:500; transition:color .2s; }
+  .nav-links a:hover, .nav-links a.active { color:var(--blue-light); }
+
+  main { position:relative; z-index:2; padding:7rem 3rem 4rem; max-width:1200px; margin:0 auto; }
+  .page-header h1 { font-family:'Syne',sans-serif; font-size:clamp(1.5rem,3vw,2rem); font-weight:700; margin-bottom:2rem; }
+
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1.2rem; margin-bottom:2.5rem; }
+  .stat-card {
+    background:var(--card); border:1px solid var(--border); border-radius:16px; padding:1.5rem;
+    backdrop-filter:blur(20px); text-align:center; transition:transform .2s;
+  }
+  .stat-card:hover { transform:translateY(-3px); }
+  .stat-card .stat-val { font-family:'Syne',sans-serif; font-size:clamp(1.8rem,3vw,2.5rem); font-weight:700; margin-bottom:.3rem; }
+  .stat-card .stat-label { font-size:.8rem; color:var(--muted); font-weight:500; }
+  .val-blue { background:linear-gradient(135deg,var(--blue-light),var(--cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .val-red { background:linear-gradient(135deg,var(--red),#FF8FA3); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .val-green { background:linear-gradient(135deg,var(--green),var(--cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+  .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+  @media(max-width:768px) { .charts-row { grid-template-columns:1fr; } }
+  .chart-card {
+    background:var(--card); border:1px solid var(--border); border-radius:20px; padding:1.5rem;
+    backdrop-filter:blur(20px);
+  }
+  .chart-card h3 { font-family:'Syne',sans-serif; font-size:1rem; font-weight:600; margin-bottom:1rem; }
+  .chart-card canvas { max-height:250px; }
+
+  .spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--blue); border-radius:50%; animation:spin .8s linear infinite; margin:3rem auto; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+</style>
+</head>
+<body>
+<div class="bg-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+
+<nav>
+  <a href="/" class="nav-logo"><div class="logo-shield">🛡</div> FraudSentinel AI</a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/analyze">Analyze</a>
+    <a href="/history">History</a>
+    <a href="/flagged-ui">Flagged</a>
+    <a href="/admin/stats-ui" class="active">Dashboard</a>
+  </div>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>📊 Admin Dashboard</h1>
+  </div>
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-val val-blue" id="totalScans">—</div><div class="stat-label">Total Scans</div></div>
+    <div class="stat-card"><div class="stat-val val-red" id="flaggedJobs">—</div><div class="stat-label">Flagged Jobs</div></div>
+    <div class="stat-card"><div class="stat-val val-green" id="totalUsers">—</div><div class="stat-label">Registered Users</div></div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>Scans by Model</h3>
+      <canvas id="modelChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Flagged by Severity</h3>
+      <canvas id="severityChart"></canvas>
+    </div>
+  </div>
+</main>
+
+<script>
+fetch('/admin/stats')
+  .then(res => {
+    if (!res.ok) throw new Error('Unauthorized');
+    return res.json();
+  })
+  .then(stats => {
+    document.getElementById('totalScans').textContent = stats.total_scans;
+    document.getElementById('flaggedJobs').textContent = stats.flagged_jobs;
+    document.getElementById('totalUsers').textContent = stats.total_users;
+
+    new Chart(document.getElementById('modelChart'), {
+      type: 'bar',
+      data: {
+        labels: Object.keys(stats.by_model),
+        datasets: [{
+          data: Object.values(stats.by_model),
+          backgroundColor: ['rgba(108,99,255,0.6)', 'rgba(0,245,160,0.6)', 'rgba(0,212,255,0.6)'],
+          borderRadius: 8, borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true, plugins: { legend: { display: false } },
+        scales: {
+          y: { ticks: { color: 'rgba(232,232,240,0.5)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { ticks: { color: 'rgba(232,232,240,0.5)' }, grid: { display: false } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('severityChart'), {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(stats.by_severity),
+        datasets: [{
+          data: Object.values(stats.by_severity),
+          backgroundColor: ['rgba(255,77,109,0.7)', 'rgba(255,200,0,0.7)', 'rgba(0,245,160,0.7)'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true, cutout: '65%',
+        plugins: { legend: { position: 'bottom', labels: { color: 'rgba(232,232,240,0.5)', padding: 15 } } }
+      }
+    });
+  })
+  .catch(e => {
+    document.getElementById('statsGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)">🔒 Admin access required. <a href="/auth" style="color:var(--blue-light)">Sign in</a></div>`;
+  });
+</script>
+</body>
+</html>
